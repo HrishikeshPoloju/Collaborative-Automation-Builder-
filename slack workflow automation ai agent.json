@@ -1,0 +1,395 @@
+{
+  "name": "workflows automation",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": [
+          "app_mention"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C09AV33QATU",
+          "mode": "list",
+          "cachedResultName": "workflow_creation"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        320,
+        144
+      ],
+      "id": "3f9b602c-f18b-4ed5-81c2-f1a3766bce2a",
+      "name": "Slack Trigger",
+      "webhookId": "9b29f626-c7cc-4d75-8423-c2ac2517f1de",
+      "credentials": {
+        "slackApi": {
+          "id": "e0UIfH0S77hODj81",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields').item.json.blocks[0].elements[0].elements[1].text }}",
+        "options": {
+          "systemMessage": "=must at last ask( if they want to proceed by typing \"proceed\". )You are an work flow automation assistant for building automations in n8n. The user will provide ideas for workflows=>({{ $('Edit Fields').item.json.blocks[0].elements[0].elements[1].text }}). (strictly stick around towards n8n only discuss about nodes inside n8n dont go outside that)\nUnderstand their request, ask clarifying questions, suggest possible solutions related what n8n node we can add, \nand finally ask if they want to proceed by typing \"proceed\". \n\nfocus on user requirements rather than giving whole workflow. \n "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1232,
+        144
+      ],
+      "id": "c399a132-28b5-4940-9390-c64b7252d43b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09AV33QATU",
+          "mode": "list",
+          "cachedResultName": "workflow_creation"
+        },
+        "text": "={{ $json.message.content }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        2272,
+        128
+      ],
+      "id": "c87eefdb-c14a-467a-aecd-7f1f8f2f77d2",
+      "name": "Send a message",
+      "webhookId": "1e971700-03bd-40f2-ba73-f1820210d692",
+      "credentials": {
+        "slackApi": {
+          "id": "e0UIfH0S77hODj81",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1232,
+        400
+      ],
+      "id": "a0be4519-7964-4182-ad24-e418869188b0",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "f0WoUKShqrcZQyqN",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a senior n8n solution architect.\nUsing the conversation below {{ $json.output }}, produce a zero-ambiguity build plan for an n8n workflow.\nOutput in Slack-ready Markdown.\n\nInclude:\n1) Node-by-node list\n2) Exact configuration\n3) Credentials\n4) Env variables\n5) Error handling & retries\n6) Testing & activation notes\n",
+              "role": "assistant"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1920,
+        128
+      ],
+      "id": "ec8eab26-1a53-4f5e-8537-e5893876e9c0",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "A8zaPOvOeUvXsTyO",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "01575b96-3f22-4228-b123-4640c262aa54",
+              "leftValue": "={{ $('Slack Trigger').item.json.blocks[0].elements[0].elements[1].text.toLowerCase().trim() }}",
+              "rightValue": "proceed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1632,
+        144
+      ],
+      "id": "a342283c-ea22-4a6c-adf0-da80d176f835",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09AV33QATU",
+          "mode": "list",
+          "cachedResultName": "workflow_creation"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1808,
+        416
+      ],
+      "id": "e6790d49-4a9e-46cc-adb5-8e6bbba39257",
+      "name": "Send a message1",
+      "webhookId": "5447770c-9a9c-4385-a7a0-44678c907383",
+      "credentials": {
+        "slackApi": {
+          "id": "e0UIfH0S77hODj81",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "686e8d79-c20a-4c5f-90b0-0dd38f6dd4f5",
+              "name": "channel",
+              "value": "={{ $('Slack Trigger').item.json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "b8cefb2c-a150-4804-85a5-ddb8543fbf05",
+              "name": "blocks[0].elements[0].elements[1].text",
+              "value": "={{ $('Slack Trigger').item.json.blocks[0].elements[0].elements[1].text }}",
+              "type": "string"
+            },
+            {
+              "id": "c19dc601-3be3-481f-8296-bf6a965642fc",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "3103d2dd-40bd-4331-87a6-ab41848c8a6d",
+              "name": "blocks[0].elements[0].elements[0].user_id",
+              "value": "={{ $('Slack Trigger').item.json.blocks[0].elements[0].elements[0].user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3ab026ce-da07-492c-ab73-abb0ffac677f",
+              "name": "event_ts",
+              "value": "={{ $('Slack Trigger').item.json.event_ts }}",
+              "type": "string"
+            },
+            {
+              "id": "93c30aab-9440-43a2-ae40-17255c292c27",
+              "name": "memoryKey",
+              "value": "={{ $json.memoryKey }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        144
+      ],
+      "id": "aa1797c6-aca7-4f1f-bdbd-c004f958a54d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// input comes from Slack Trigger\nconst userId =$input.first().json.blocks[0].elements[0].elements[0].user_id ;        // Slack user id\nconst channelId =$input.first().json.channel ;  // Slack channel id\n\n// Create a unique memory key\nconst memoryKey = `${userId}_${channelId}`;\n\n// Pass everything forward + the new key\nreturn [{\n  json: {\n    memoryKey,\n    userId,\n    channelId,\n    text:$input.first().json.blocks[0].elements[0].elements[1].text,\n    ts: $input.first().json.ts\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        144
+      ],
+      "id": "824ca5bc-e7c3-41aa-acfa-6daca89f8a50",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.memoryKey }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        400
+      ],
+      "id": "b4f4f03e-c89c-45f8-a0d4-5d82708353f9",
+      "name": "Simple Memory1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d11bdd36-3d0b-4ba7-b7c3-1c3ec491a471",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b1a782c5fc8ecdd539643394ce73eb86dd98a655c51054bcda24330644dd668e"
+  },
+  "id": "WN8RaRDDxrXJESHx",
+  "tags": []
+}
